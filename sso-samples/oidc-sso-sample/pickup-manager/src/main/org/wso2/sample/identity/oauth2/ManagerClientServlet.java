@@ -62,6 +62,13 @@ public class ManagerClientServlet extends HttpServlet {
             return;
         }
 
+        if ("true".equalsIgnoreCase(request.getParameter("logout"))) {
+            LOGGER.log(Level.INFO, "Handling an application logout.");
+            CommonUtils.logout(request, response);
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
         final String error = request.getParameter(OAuth2Constants.ERROR);
 
         if (StringUtils.isNotBlank(error)) {
@@ -77,6 +84,7 @@ public class ManagerClientServlet extends HttpServlet {
 
         try {
             // Obtain token response
+            LOGGER.log(Level.INFO, "Handling the authentication response.");
             CommonUtils.getToken(request, response);
             response.sendRedirect("home.jsp");
         } catch (SampleAppServerException | OAuthSystemException | OAuthProblemException e) {

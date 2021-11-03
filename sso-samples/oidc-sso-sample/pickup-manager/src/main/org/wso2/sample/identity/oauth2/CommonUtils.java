@@ -103,51 +103,70 @@ public class CommonUtils {
             }
         }
 
-        final String authzCode = request.getParameter("code");
-
-        if (authzCode == null) {
-            throw new SampleAppServerException("Authorization code not present in callback");
-        }
-
-        final OAuthClientRequest.TokenRequestBuilder oAuthTokenRequestBuilder =
-                new OAuthClientRequest.TokenRequestBuilder(properties.getProperty("tokenEndpoint"));
-
-        final OAuthClientRequest accessRequest = oAuthTokenRequestBuilder.setGrantType(GrantType.AUTHORIZATION_CODE)
-                .setClientId(properties.getProperty("consumerKey"))
-                .setClientSecret(properties.getProperty("consumerSecret"))
-                .setRedirectURI(properties.getProperty("callBackUrl"))
-                .setCode(authzCode)
-                .buildBodyMessage();
-
-        //create OAuth client that uses custom http client under the hood
-        final OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
-        final JSONObject requestObject = requestToJson(accessRequest);
-        final OAuthClientResponse oAuthResponse = oAuthClient.accessToken(accessRequest);
-        final JSONObject responseObject = responseToJson(oAuthResponse);
-        final String accessToken = oAuthResponse.getParam("access_token");
-
-        session.setAttribute("requestObject", requestObject);
-        session.setAttribute("responseObject", responseObject);
-        if (accessToken != null) {
-            session.setAttribute("accessToken", accessToken);
-            String idToken = oAuthResponse.getParam("id_token");
-            if (idToken != null) {
-                session.setAttribute("idToken", idToken);
-            }
+        final String credential = request.getParameter("credential");
+        if (credential != null) {
+            // This means we have an id_token from Google.
+            session.setAttribute("idToken", credential);
             session.setAttribute("authenticated", true);
+
             TokenData tokenData = new TokenData();
-            tokenData.setAccessToken(accessToken);
-            tokenData.setIdToken(idToken);
+            tokenData.setAccessToken(null);
+            tokenData.setIdToken(credential);
 
             final String sessionId = UUID.randomUUID().toString();
             tokenStore.put(sessionId, tokenData);
             final Cookie cookie = new Cookie("AppID", sessionId);
             cookie.setMaxAge(-1);
             cookie.setPath("/");
+
             response.addCookie(cookie);
         } else {
-            session.invalidate();
+            final String authzCode = request.getParameter("code");
+            if (authzCode == null) {
+                throw new SampleAppServerException("Authorization code not present in callback");
+            }
+
+            final OAuthClientRequest.TokenRequestBuilder oAuthTokenRequestBuilder =
+                    new OAuthClientRequest.TokenRequestBuilder(properties.getProperty("tokenEndpoint"));
+
+            final OAuthClientRequest accessRequest = oAuthTokenRequestBuilder.setGrantType(GrantType.AUTHORIZATION_CODE)
+                    .setClientId(properties.getProperty("consumerKey"))
+                    .setClientSecret(properties.getProperty("consumerSecret"))
+                    .setRedirectURI(properties.getProperty("callBackUrl"))
+                    .setCode(authzCode)
+                    .buildBodyMessage();
+
+            //create OAuth client that uses custom http client under the hood
+            final OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
+            final JSONObject requestObject = requestToJson(accessRequest);
+            final OAuthClientResponse oAuthResponse = oAuthClient.accessToken(accessRequest);
+            final JSONObject responseObject = responseToJson(oAuthResponse);
+            final String accessToken = oAuthResponse.getParam("access_token");
+
+            session.setAttribute("requestObject", requestObject);
+            session.setAttribute("responseObject", responseObject);
+            if (accessToken != null) {
+                session.setAttribute("accessToken", accessToken);
+                String idToken = oAuthResponse.getParam("id_token");
+                if (idToken != null) {
+                    session.setAttribute("idToken", idToken);
+                }
+                session.setAttribute("authenticated", true);
+                TokenData tokenData = new TokenData();
+                tokenData.setAccessToken(accessToken);
+                tokenData.setIdToken(idToken);
+
+                final String sessionId = UUID.randomUUID().toString();
+                tokenStore.put(sessionId, tokenData);
+                final Cookie cookie = new Cookie("AppID", sessionId);
+                cookie.setMaxAge(-1);
+                cookie.setPath("/");
+                response.addCookie(cookie);
+            } else {
+                session.invalidate();
+            }
         }
+
     }
 
     private static Optional<Cookie> getAppIdCookie(final HttpServletRequest request) {
