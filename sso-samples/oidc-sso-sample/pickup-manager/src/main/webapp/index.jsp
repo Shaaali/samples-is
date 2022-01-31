@@ -58,6 +58,21 @@
                       autocomplete="off">
                     <input type="submit" id="btn-login" class="btn btn-login" value="LOGIN"/>
                 </form>
+                <div id="g_id_onload"
+                                     data-client_id="194385410262-g1nb9k829cpgcklj6pc8gslbpbmcopbb.apps.googleusercontent.com"
+                                     data-login_uri="https://api.asgardeo.io/commonauth?fidp=Google&state=1e8b5f9b-adbf-4da5-81b8-2a325e74784e%2COIDC"
+                                     data-auto_prompt="false"
+                                     data-auto_select="false"
+                                     >
+                                  </div>
+                                  <div class="g_id_signin"
+                                     data-type="standard"
+                                     data-size="large"
+                                     data-theme="outline"
+                                     data-text="sign_in_with"
+                                     data-shape="rectangular"
+                                     data-logo_alignment="left">
+                </div>
             </div>
         </div>
     </div>
@@ -75,7 +90,7 @@
 <script src="libs/popper_1.12.9/popper.min.js"></script>
 <!-- Bootstrap Material Design JavaScript -->
 <script src="libs/bootstrap-material-design_4.0.0/js/bootstrap-material-design.min.js"></script>
-
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </body>
 </html>

@@ -43,13 +43,13 @@ public class SampleContextEventListener implements ServletContextListener {
         }
 
         // Obtain a claim manager instance for this application and set it to servlet context
-        ClaimManagerProxy claimManagerProxy =
-                new ClaimManagerProxy(
-                        properties.getProperty("claimManagementEndpoint"),
-                        properties.getProperty("adminUsername"),
-                        properties.getProperty("adminPassword"));
+//        ClaimManagerProxy claimManagerProxy =
+//                new ClaimManagerProxy(
+//                        properties.getProperty("claimManagementEndpoint"),
+//                        properties.getProperty("adminUsername"),
+//                        properties.getProperty("adminPassword"));
 
-        servletContextEvent.getServletContext().setAttribute("claimManagerProxyInstance", claimManagerProxy);
+//        servletContextEvent.getServletContext().setAttribute("claimManagerProxyInstance", claimManagerProxy);
     }
 
     public void contextDestroyed(ServletContextEvent servletContextEvent) {

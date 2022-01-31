@@ -47,6 +47,7 @@
     final JSONObject responseObject = (JSONObject) currentSession.getAttribute("responseObject");
     
     final String idToken = (String) currentSession.getAttribute("idToken");
+    logger.log(Level.INFO, "id_token: " + idToken);
     
     String name = "";
 
@@ -71,12 +72,7 @@
                 }
             }
 
-            ClaimManagerProxy claimManagerProxy = (ClaimManagerProxy) application.getAttribute("claimManagerProxyInstance");
-
             customClaimValueMap = claimsSet.getCustomClaims();
-            
-            oidcClaimDisplayValueMap =
-                    claimManagerProxy.getOidcClaimDisplayNameMapping(new ArrayList<>(customClaimValueMap.keySet()));
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error when getting id_token details.", e);
@@ -128,8 +124,7 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <a class="dropdown-item" href="#" id="profile">Profile</a>
-                        <a class="dropdown-item" href='<%=properties.getProperty("OIDC_LOGOUT_ENDPOINT")%>?post_logout_redirect_uri=<%=properties.getProperty("post_logout_redirect_uri")%>&id_token_hint=<%=idToken%>&session_state=<%=sessionState%>'>
-                            Logout</a>
+                        <a class="dropdown-item g_id_signout" href='/pickup-manager/oauth2client?logout=true' onclick="return theFunction();">Logout</a>
                     </div>
                 </li>
                 <li class="nav-item">
@@ -406,7 +401,7 @@
                     <div class="col-md-6 d-block mx-auto">
                         <div class="card card-body table-container">
                             <div class="table-responsive content-table">
-                            <%if (!oidcClaimDisplayValueMap.isEmpty()) { %>
+                            <%if (!customClaimValueMap.isEmpty()) { %>
                                 <table class="table">
                                     <thead>
                                     <tr>
@@ -414,9 +409,9 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        <% for(String claim:oidcClaimDisplayValueMap.keySet()) { %>
+                                        <% for(String claim: customClaimValueMap.keySet()) { %>
                                             <tr>
-                                                <td><%=oidcClaimDisplayValueMap.get(claim)%> </td>
+                                                <td><%=claim%> </td>
                                                 <td><%=customClaimValueMap.get(claim).toString()%> </td>
                                             </tr>
                                         <% } %>
@@ -458,67 +453,6 @@
         </div>
     </div>
 </div>
-<div id="viewContainer">
-    <section class="actions">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12 console-headers">
-                    <span id="console-close" class="float-right console-action">
-                        <span data-toggle="tooltip" data-placement="bottom" title="Close"><i
-                                class="fas fa-times"></i></span>
-                    </span>
-                    <span id="toggleLayout" class="float-right console-action">
-                        <span data-toggle="tooltip" data-placement="bottom" title="Dock to bottom"><i
-                                class="fas fa-window-maximize"></i></span>
-                    </span>
-                    <span id="clearAll" class="float-right console-action">
-                        <span data-toggle="tooltip" data-placement="bottom" title="Clear All"><i class="fas fa-ban"></i></span>
-                    </span>
-
-                </div>
-                <div class="col-md-12">
-                    <div id="timeline-content">
-                        <ul class="timeline">
-                            <li class="event sent">
-                                <div class="request-response-infos">
-                                    <h1 class='request-response-title'>Request <span class="float-right"><i
-                                            class="fas fa-angle-down"></i></span></h1>
-                                    <div class="request-response-details mt-3">
-                                        <h2>Data:</h2>
-                                        <div class="code-container mb-3">
-                                            <button class="btn btn-primary btn-clipboard"
-                                                    data-clipboard-target=".copy-target1"><i
-                                                    class="fa fa-clipboard"></i></button>
-                                            <p class="copied">Copied..!</p>
-                                            <pre><code class="copy-target1 JSON pt-3 pb-3"><%=requestObject.toString(4)%></code></pre>
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="hidden" id="request" value="<%=requestObject.toString()%>"/>
-                            </li>
-                            <li class="event received">
-                                <div class="request-response-infos">
-                                    <h1 class='request-response-title'>Response <span class="float-right"><i
-                                            class="fa fa-angle-down"></i></span></h1>
-                                    <div class="request-response-details mt-3">
-                                        <h2>Data:</h2>
-                                        <div class="code-container mb-3">
-                                            <button class="btn btn-primary btn-clipboard"
-                                                    data-clipboard-target=".copy-target3"><i
-                                                    class="fa fa-clipboard"></i></button>
-                                            <p class="copied">Copied..!</p>
-                                            <pre><code class="copy-target3 JSON pt-3 pb-3 requestContent"><%=responseObject.toString(4)%></code></pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
 
 <!-- JQuery -->
 <script src="libs/jquery_3.3.1/jquery.min.js"></script>
@@ -536,29 +470,17 @@
 <script src="libs/clipboard/clipboard.min.js"></script>
 <!-- Custom Js -->
 <script src="js/custom.js"></script>
-<%
-    boolean enableOIDCSessionManagement = true;
-    if (session.getAttribute(OAuth2Constants.OIDC_SESSION_MANAGEMENT_ENABLED) != null) {
-        enableOIDCSessionManagement = (boolean) session.getAttribute(OAuth2Constants.OIDC_SESSION_MANAGEMENT_ENABLED);
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script type="text/javascript">
+    function theFunction () {
+      const button = document.getElementById(‘signout_button’);
+      button.onclick = () => {
+        // google.accounts.id.disableAutoSelect();
+      }
+      return true;
     }
-    if (enableOIDCSessionManagement) {
-%>
-<iframe id="rpIFrame" src="rpIFrame.jsp" frameborder="0" width="0" height="0"></iframe>
-<%
-    }
-%>
-<%
-    boolean enableOIDCBackchannelLogout = true;
-    if (session.getAttribute(OAuth2Constants.OIDC_BACK_CHANNEL_LOGOUT_ENABLED) != null) {
-        enableOIDCBackchannelLogout = (boolean) session.getAttribute(OAuth2Constants.OIDC_BACK_CHANNEL_LOGOUT_ENABLED);
-    }
-    if (enableOIDCBackchannelLogout) {
-%>
-<iframe id="bcIFrame" src="bcIFrame.jsp" frameborder="0" width="0" height="0"></iframe>
-<%
-    }
-%>
-<script>hljs.initHighlightingOnLoad();</script>
+</script>
 
 </body>
 </html>
